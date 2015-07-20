@@ -1,0 +1,232 @@
+[%- USE T8 %]
+[%- USE HTML %]
+[%- USE LxERP %]
+[%- USE L %]
+
+<div id="ui-tabs-basic-data">
+  <table width="100%">
+    <tr valign="top">
+      <td>
+        <table width="100%">
+          <tr>
+            <th align="right">[% SELF.cv | $T8 %]</th>
+            [% SET cv_id = SELF.cv _ '_id' %]
+            <td>[% L.customer_vendor_picker('order.cv_id', SELF.order.$cv_id, type=SELF.cv, style='width: 300px') %]</td>
+          </tr>
+
+          <tr id='cp_row' [%- IF !SELF.order.${SELF.cv}.contacts.size %]style='display:none;'[%- END %]>
+            <th align="right">[% 'Contact Person' | $T8 %]</th>
+            <td>[% L.select_tag('order.cp_id',
+                                SELF.order.${SELF.cv}.contacts,
+                                default=SELF.order.cp_id,
+                                title_key='full_name_dep',
+                                value_key='cp_id',
+                                with_empty=1,
+                                style='width: 300px') %]</td>
+          </tr>
+
+          <tr id='shipto_row' [%- IF !SELF.order.${SELF.cv}.shipto.size %]style='display:none;'[%- END %]>
+            <th align="right">[% 'Shipping Address' | $T8 %]</th>
+            <td>[% L.select_tag('order.shipto_id',
+                                SELF.order.${SELF.cv}.shipto,
+                                default=SELF.order.shipto_id,
+                                title_key='displayable_id',
+                                value_key='shipto_id',
+                                with_empty=1,
+                                style='width: 300px') %]</td>
+          </tr>
+
+          <tr>
+            <th align="right">[% 'Steuersatz' | $T8 %]</th>
+            <td>[% L.select_tag('order.taxzone_id', SELF.all_taxzones, default=SELF.order.taxzone_id, title_key='description', style='width: 300px') %]</td>
+          </tr>
+
+          <tr>
+            <th align="right">[% 'Shipping Point' | $T8 %]</th>
+            <td>[% L.input_tag('order.shippingpoint', SELF.order.shippingpoint, style='width: 300px') %]</td>
+          </tr>
+
+          <tr>
+            <th align="right">[% 'Ship via' | $T8 %]</th>
+            <td>[% L.input_tag('order.shipvia', SELF.order.shipvia, style='width: 300px') %]</td>
+          </tr>
+
+          <tr>
+            <th align="right">[% 'Transaction description' | $T8 %]</th>
+            <td>[% L.input_tag('order.transaction_description', SELF.order.transaction_description, style='width: 300px') %]</td>
+          </tr>
+
+        </table>
+      </td>
+
+      <td align="right">
+        <table>
+
+          <tr>
+            <td colspan="2" align="center">
+              [%- IF SELF.order.closed %] [% 'Closed' | $T8 %] [%- ELSE %] [% 'Open' | $T8 %] [%- END %]
+            </td>
+          </tr>
+
+          <tr>
+            <th align="right">[% 'Employee' | $T8 %]</th>
+            <td>[% L.select_tag('order.employee_id',
+              SELF.all_employees,
+              default=(SELF.order.employee_id ? SELF.order.employee_id : SELF.current_employee_id),
+              title_key='safe_name') %]</td>
+          </tr>
+
+          <tr>
+            <th width="70%" align="right" nowrap>[% 'Order Number' | $T8 %]</th>
+            <td>[% L.input_tag('order.ordnumber', SELF.order.ordnumber, size = 11) %]</td>
+          </tr>
+
+          <tr>
+            <th width="70%" align="right" nowrap>[% 'Customer Order Number' | $T8 %]</th>
+            <td>[% L.input_tag('order.cusordnumber', SELF.order.cusordnumber, size = 11) %]</td>
+          </tr>
+
+          <tr>
+            <th width="70%" align="right" nowrap>[% 'Order Date' | $T8 %]</th>
+            <td>[% L.date_tag('order.transdate', SELF.order.transdate) %]</td>
+          </tr>
+
+          <tr>
+            <th width="70%" align="right" nowrap>[% 'Project Number' | $T8 %]</th>
+            <td>[%- L.select_tag('order.globalproject_id', SELF.all_projects, default=SELF.order.globalproject_id, title_key='projectnumber', with_empty = 1) %]</td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+  <table width="100%">
+    <tr>
+      <td>
+        <table id="row_table_id" width="100%">
+          <thead>
+            <tr class="listheading">
+              <th class="listheading" style='display:none'></th>
+              <th class="listheading" style='text-align:center' nowrap width="1"><img src="image/updown.png" alt="[%- LxERP.t8('reorder item') %]"></th>
+              <th class="listheading" style='text-align:center' nowrap width="1"><img src="image/close.png" alt="[%- LxERP.t8('delete item') %]"></th>
+              <th class="listheading" nowrap >[%- 'Part'         | $T8 %] </th>
+              <th class="listheading" nowrap width="5" >[%- 'Qty'          | $T8 %] </th>
+              <th class="listheading" nowrap width="5" >[%- 'Price Factor' | $T8 %] </th>
+              <th class="listheading" nowrap width="5" >[%- 'Unit'         | $T8 %] </th>
+              <th class="listheading" nowrap width="15">[%- 'Price'        | $T8 %] </th>
+              <th class="listheading" nowrap width="5" >[%- 'Discount'     | $T8 %] </th>
+              <th class="listheading" nowrap width="10">[%- 'Extended'     | $T8 %] </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            [%- FOREACH item = SELF.order.items_sorted %]
+              [%- PROCESS order/tabs/_row.html ITEM=item %]
+            [%- END %]
+            [%- IF !SELF.order.items.size %]
+              [%- PROCESS order/tabs/_row.html ITEM='' %]
+            [%- END %]
+          </tbody>
+
+        </table>
+      </td>
+    </tr>
+
+    <tr>
+    </tr>
+
+    <tr>
+      <td>[%- L.button_tag('add_order_item_row()', LxERP.t8("Add Row")) -%]</td>
+    </tr>
+
+    <tr>
+      <td align="right">
+        <table>
+          [%- IF NOT taxincluded %]
+          <tr>
+            <th align="right">[%- 'Subtotal' | $T8 %]</th>
+            <td align="right">[%- SELF.order.netamount_as_number %]</td>
+          </tr>
+          [%- END %]
+          [%- FOREACH tax = SELF.taxes %]
+          <tr>
+            <th align="right">[%- tax.tax.description %] [% tax.tax.rate_as_percent %]%</th>
+            <td align="right">[%- LxERP.format_amount(tax.amount, 2, 0) %]</td>
+          </tr>
+          [%- END %]
+          <tr>
+            <th align="right">[%- 'Total' | $T8 %]</th>
+            <td align="right">[%- SELF.order.amount_as_number %]</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr>
+      <td><hl></td>
+    </tr>
+
+  </table>
+
+</div>
+
+
+[% L.sortable_element('#row_table_id tbody') %]
+
+<script type='text/javascript'>
+function reload_cv_dependend_selections() {
+  $.post("controller.pl", { 'action': 'Order/customer_vendor_changed',
+                            'cv_id':  function(){ return $('#order_cv_id').val() },
+                            'type':   function(){ return $('#type').val() },
+                          }, kivi.eval_json_result);
+}
+
+function add_order_item_row() {
+  $.post("controller.pl", { 'action': 'Order/add_item_row',
+                            'type'  : function(){ return $('#type').val() }
+                          }, kivi.eval_json_result);
+}
+
+function delete_order_item_row(clicked) {
+  var row = $(clicked).parents("tr").first();
+  $(row).remove();
+}
+
+function set_item_values(event) {
+  var cv_id = $('#order_cv_id').val();
+  var parts_id = $(event.target).val();
+  var row = $(event.target).parents("tr").first();
+
+  var item_id_dom = $(row).find('[name="item_id"]');
+  var qty_dom = $(row).find('[id^="order_orderitems"][id$="qty_as_number"]');
+  var unit_dom = $(row).find('[id^="order_orderitems"][id$="unit"]');
+  var sellprice_dom = $(row).find('[id^="order_orderitems"][id$="sellprice_as_number"]');
+  var discount_dom = $(row).find('[id^="order_orderitems"][id$="discount_as_percent"]');
+
+  $.post("controller.pl", { 'action': 'Order/set_item_values',
+                            'item_id': item_id_dom.val(),
+                            'cv_id': cv_id,
+                            'parts_id': parts_id,
+                            'qty': qty_dom.val(),
+                            'discount': discount_dom.val(),
+                            'sellprice': sellprice_dom.val(),
+                            'qty_dom_id': qty_dom.attr("id"),
+                            'unit_dom_id': unit_dom.attr("id"),
+                            'sellprice_dom_id': sellprice_dom.attr("id"),
+                            'discount_dom_id': discount_dom.attr("id"),
+                            'type': function(){ return $('#type').val() }
+                          }, kivi.eval_json_result);
+}
+
+function recalc_linetotal(item_id, amount) {
+  $('#item_' + item_id).parents("tr").first().find('[name="linetotal"]').html(amount);
+}
+
+
+$(function(){
+  $('#order_cv_id').change(reload_cv_dependend_selections);
+  $('[id^="order_orderitems"][id$="parts_id"]').change(set_item_values);
+});
+</script>
